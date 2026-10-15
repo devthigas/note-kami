@@ -8,7 +8,7 @@
 
 **Purpose**: Project initialization, dependency installation, and multi-database infrastructure configuration.
 
-- [ ] T001 Add `gem "lexxy"` and development dependency `gem "hotwire-spark"` to Gemfile and run `bundle install`
+- [x] T001 Add `gem "lexxy"` and development dependency `gem "hotwire-spark"` to Gemfile and run `bundle install`
   - *Acceptance Criteria*: `Gemfile` contains `gem "lexxy"` and group `:development` contains `gem "hotwire-spark"`; `bundle install` completes with exit code 0.
   - *Validation*: `bundle exec gem list | grep -E "lexxy|hotwire-spark"`
 
