@@ -12,11 +12,11 @@
   - *Acceptance Criteria*: `Gemfile` contains `gem "lexxy"` and group `:development` contains `gem "hotwire-spark"`; `bundle install` completes with exit code 0.
   - *Validation*: `bundle exec gem list | grep -E "lexxy|hotwire-spark"`
 
-- [ ] T002 [P] Configure multi-database SQLite3 and Solid Cable in config/database.yml and config/cable.yml
+- [ x ] T002 [P] Configure multi-database SQLite3 and Solid Cable in config/database.yml and config/cable.yml
   - *Acceptance Criteria*: `config/database.yml` defines separate SQLite database files for `primary` (`storage/development.sqlite3`), `cable` (`storage/development_cable.sqlite3`), `cache` (`storage/development_cache.sqlite3`), and `queue` (`storage/development_queue.sqlite3`) with WAL mode; `config/cable.yml` sets development adapter to `solid_cable` connecting to `cable` database.
   - *Validation*: `bin/rails db:prepare`
 
-- [ ] T003 [P] Configure Lexxy and Stimulus pins in config/importmap.rb and app/javascript/application.js
+- [ x ] T003 [P] Configure Lexxy and Stimulus pins in config/importmap.rb and app/javascript/application.js
   - *Acceptance Criteria*: `config/importmap.rb` pins `lexxy` and `@rails/activestorage`; `app/javascript/application.js` imports `lexxy` without JavaScript syntax or bundling errors.
   - *Validation*: `bin/rails importmap:verify`
 
