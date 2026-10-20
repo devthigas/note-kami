@@ -8,7 +8,7 @@
 
 ## Summary
 
-Build an online collaborative notebook workspace for NoteKami using Rails 8.1 and SQLite3. The application features passwordless authentication via expiring Magic Links (powered by Rails 8 native token generation) and Google OAuth2, rich text editing via the extensible Lexxy editor (`gem "lexxy"`) with debounced auto-save (750ms threshold), hierarchical organization through folders and nested sub-pages (with circular nesting protection), real-time peer collaboration and presence indicators powered by Solid Cable over SQLite, and public read-only publishing via tokenized shareable links.
+Build an online collaborative notebook workspace for NoteKami using Rails 8.1 and SQLite3. The application features passwordless authentication via expiring Magic Links (powered by Rails 8 native token generation) and Google OAuth2 (including automatic synchronization of the user's OAuth `profile_photo` URL, with manual file upload deferred to future specs), rich text editing via the extensible Lexxy editor (`gem "lexxy"`) with debounced auto-save (750ms threshold), hierarchical organization through folders and nested sub-pages (with circular nesting protection), real-time peer collaboration and presence indicators (rendering OAuth profile photos or initials fallback) powered by Solid Cable over SQLite, and public read-only publishing via tokenized shareable links.
 
 ---
 

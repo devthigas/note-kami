@@ -39,6 +39,7 @@ Represents an individual with credentials, profile data, and ownership of worksp
 - **Fields**:
   - `id`: `bigint`, Primary Key, Auto-increment.
   - `name`: `string`, Not Null.
+  - `profile_photo`: `string`, Nullable (stores the profile picture URL provided by external OAuth provider; direct file upload is deferred to future specs).
   - `email_address`: `string`, Not Null, Indexed (Unique).
   - `password_digest`: `string`, Nullable (enables passwordless magic link & OAuth-only accounts).
   - `last_sign_in_at`: `datetime`, Nullable (used as a salt/invalidation timestamp for magic link single-use).
@@ -54,6 +55,7 @@ Represents an individual with credentials, profile data, and ownership of worksp
 - **Validations**:
   - `name`: `presence: true, length: { maximum: 100 }`
   - `email_address`: `presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }`
+  - `profile_photo`: optional (`allow_nil: true`)
 - **Tokens**:
   - `generates_token_for :magic_link, expires_in: 15.minutes { last_sign_in_at }`
 
