@@ -48,7 +48,7 @@ User Stories 2 & 4 require active presence tracking (who is viewing/editing) and
 - **Database Segregation**: In development and production, Solid Cable operates against a dedicated SQLite database (`storage/development_cable.sqlite3`), configured in `config/database.yml` and `config/cable.yml`. This guarantees that high-frequency polling/websocket writes never lock the primary SQLite application database.
 - **Presence Tracking (`NoteChannel`)**:
   - When a collaborator opens a note, the client connects to `NoteChannel.subscribe(note_id: id)`.
-  - The channel broadcasts `presence_diff` events (connected users: name, avatar color, current timestamp).
+  - The channel broadcasts `presence_diff` / `presence_update` events (connected users: `id`, `name`, `profile_photo` URL from OAuth if present, `avatar_color` for initials fallback, and current timestamp).
   - Client sends periodic heartbeats or disconnects on `unsubscribed` to clean up presence list.
 - **Content Synchronization**:
   - Turbo Streams over Action Cable broadcasts updated fragments, title updates, and collaborator join/leave states.
@@ -86,19 +86,19 @@ Client-side debounce in a lightweight Vanilla JS Stimulus controller avoids unne
 
 ---
 
-## Decision 4: Authentication via Magic Links & Google OAuth2
+## Decision 4: Authentication via Magic Links & Google OAuth2 (with OAuth Profile Photo)
 
 ### Context
 The user requested:
 1. Native Rails authentication foundation (`bin/rails generate authentication`).
 2. Passwordless login via **Magic Links** sent by email with expiration.
-3. Social login with **Google OAuth**.
+3. Social login with **Google OAuth**, storing the user's OAuth profile photo (`profile_photo`) on the `User` record while deferring direct image file uploads to future specifications.
 
 ### Architectural Approach
 
 #### 1. Native Foundation
 - Generate Rails 8 standard authentication scaffold:
-  - `User` model (`app/models/user.rb`).
+  - `User` model (`app/models/user.rb`) with nullable `profile_photo` string attribute.
   - `Session` model (`app/models/session.rb`).
   - `Current` attributes (`app/models/current.rb`).
   - `Authentication` controller concern (`app/controllers/concerns/authentication.rb`).
@@ -129,11 +129,11 @@ The user requested:
      - If nil (expired or reused):
        - Renders error flash: "This sign-in link is invalid or has expired. Please request a new one." and redirects to login.
 
-#### 3. Google OAuth Integration
-- To adhere to Constitution Principle II (Zero Gem Bloat) and avoid unnecessary omniauth gem bloat, we implement a clean, lightweight OAuth2 handler or use standard `omniauth-google-oauth2`:
-  - `GET /auth/google`: Generates secure state/nonce in session and redirects browser to Google's OAuth2 authorization endpoint (`https://accounts.google.com/o/oauth2/v2/auth`).
-  - `GET /auth/google/callback`: Verifies state token, exchanges authorization code for identity tokens via Google's token endpoint (`https://oauth2.googleapis.com/token`), extracts verified email and profile name, matches/creates user and identity, and starts session (`start_new_session_for(user)`).
-  - Stored in `OAuthIdentity` model (`belongs_to :user`, `provider: 'google'`, `uid`, `email`).
+#### 3. Google OAuth Integration & Profile Photo Sync
+- To adhere to Constitution Principle II (Zero Gem Bloat) and avoid unnecessary omniauth gem bloat, we implement a clean, lightweight OAuth2 handler:
+  - `GET /auth/google`: Generates secure state/nonce in session and redirects browser to Google's OAuth2 authorization endpoint (`https://accounts.google.com/o/oauth2/v2/auth`) requesting `openid email profile` scopes.
+  - `GET /auth/google/callback`: Verifies state token, exchanges authorization code for identity tokens via Google's token endpoint (`https://oauth2.googleapis.com/token`), extracts verified `email`, `name`, and `picture` (avatar URL), matches/creates user and identity, updates `user.profile_photo` with the OAuth `picture` URL when present, and starts session (`start_new_session_for(user)`).
+  - Stored in `OAuthIdentity` model (`belongs_to :user`, `provider: 'google'`, `uid`, `email`), while `users.profile_photo` stores the nullable string URL for fast rendering in headers and collaboration presence indicators without extra joins or Active Storage upload overhead (manual avatar upload is deferred to future specs).
 
 ### Rationale
 Leveraging Rails 8's built-in `generates_token_for` provides cryptographic security, tamper-resistance, and time-based expiration out-of-the-box without requiring external gems like Devise or passwordless gems.

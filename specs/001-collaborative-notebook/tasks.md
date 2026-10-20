@@ -12,11 +12,11 @@
   - *Acceptance Criteria*: `Gemfile` contains `gem "lexxy"` and group `:development` contains `gem "hotwire-spark"`; `bundle install` completes with exit code 0.
   - *Validation*: `bundle exec gem list | grep -E "lexxy|hotwire-spark"`
 
-- [ x ] T002 [P] Configure multi-database SQLite3 and Solid Cable in config/database.yml and config/cable.yml
+- [x] T002 [P] Configure multi-database SQLite3 and Solid Cable in config/database.yml and config/cable.yml
   - *Acceptance Criteria*: `config/database.yml` defines separate SQLite database files for `primary` (`storage/development.sqlite3`), `cable` (`storage/development_cable.sqlite3`), `cache` (`storage/development_cache.sqlite3`), and `queue` (`storage/development_queue.sqlite3`) with WAL mode; `config/cable.yml` sets development adapter to `solid_cable` connecting to `cable` database.
   - *Validation*: `bin/rails db:prepare`
 
-- [ x ] T003 [P] Configure Lexxy and Stimulus pins in config/importmap.rb and app/javascript/application.js
+- [x] T003 [P] Configure Lexxy and Stimulus pins in config/importmap.rb and app/javascript/application.js
   - *Acceptance Criteria*: `config/importmap.rb` pins `lexxy` and `@rails/activestorage`; `app/javascript/application.js` imports `lexxy` without JavaScript syntax or bundling errors.
   - *Validation*: `bin/rails importmap:verify`
 
@@ -29,11 +29,11 @@
 **⚠️ CRITICAL**: No user story work can begin until this foundational phase is complete.
 
 - [ ] T004 Create database migration for users, sessions, and oauth_identities in db/migrate/
-  - *Acceptance Criteria*: Creates `users` table with `email_address` (string, not null, unique index), `name` (string, not null, max length 100), `password_digest` (string, nullable), `last_sign_in_at` (datetime, nullable); creates `sessions` table with `user_id` (bigint, not null, indexed, foreign key to users), `ip_address` (string), `user_agent` (string); creates `oauth_identities` table with `user_id` (bigint, not null, indexed), `provider` (string, not null), `uid` (string, not null), compound unique index on `[:provider, :uid]`.
+  - *Acceptance Criteria*: Creates `users` table with `email_address` (string, not null, unique index), `name` (string, not null, max length 100), `profile_photo` (string, nullable, stores OAuth profile picture URL; manual upload deferred to future specs), `password_digest` (string, nullable), `last_sign_in_at` (datetime, nullable); creates `sessions` table with `user_id` (bigint, not null, indexed, foreign key to users), `ip_address` (string), `user_agent` (string); creates `oauth_identities` table with `user_id` (bigint, not null, indexed), `provider` (string, not null), `uid` (string, not null), `email` (string, nullable), compound unique index on `[:provider, :uid]`.
   - *Validation*: `bin/rails db:migrate`
 
 - [ ] T005 [P] Implement base User, Session, and Current models in app/models/user.rb, app/models/session.rb, and app/models/current.rb
-  - *Acceptance Criteria*: `User` has `has_many :sessions, dependent: :destroy`, validates `name` presence and max length 100, validates `email_address` presence, uniqueness case-insensitive, and format with `URI::MailTo::EMAIL_REGEXP`; `Session` belongs to `User`; `Current` declares `attribute :user, :session`.
+  - *Acceptance Criteria*: `User` has `has_many :sessions, dependent: :destroy`, validates `name` presence and max length 100, validates `email_address` presence, uniqueness case-insensitive, and format with `URI::MailTo::EMAIL_REGEXP`, and supports optional `profile_photo` (`allow_nil: true`); `Session` belongs to `User`; `Current` declares `attribute :user, :session`.
   - *Validation*: `bin/rails test test/models/`
 
 - [ ] T006 [P] Implement authentication controller concern in app/controllers/concerns/authentication.rb
@@ -41,7 +41,7 @@
   - *Validation*: Unit test verification in controller helper test.
 
 - [ ] T007 Configure development mailer delivery and base layout in config/environments/development.rb and app/views/layouts/application.html.erb
-  - *Acceptance Criteria*: `config/environments/development.rb` sets `config.action_mailer.delivery_method = :test` or `:letter_opener`; `app/views/layouts/application.html.erb` includes Tailwind CSS links, Hotwire Turbo tags, flash message display partial, and current user navigation header.
+  - *Acceptance Criteria*: `config/environments/development.rb` sets `config.action_mailer.delivery_method = :test` or `:letter_opener`; `app/views/layouts/application.html.erb` includes Tailwind CSS links, Hotwire Turbo tags, flash message display partial, and current user navigation header rendering `Current.user.profile_photo` avatar when present or user initials badge fallback when absent.
   - *Validation*: Start `bin/rails server` and verify HTTP 200 response.
 
 **Checkpoint**: Foundation ready — User Story implementation can proceed.
@@ -50,15 +50,15 @@
 
 ## Phase 3: User Story 1 - User Authentication & Personal Notebook Setup (Priority: P1) 🎯 MVP
 
-**Goal**: Provide secure user registration, passwordless Magic Link authentication with 15-minute expiration, Google OAuth2 login, and session management.
+**Goal**: Provide secure user registration, passwordless Magic Link authentication with 15-minute expiration, Google OAuth2 login (with automatic `profile_photo` synchronization), and session management.
 
-**Independent Test**: Register or submit email at `/magic_links/new`, receive tokenized URL in mailer, open verification link, verify session creation and redirection to `/dashboard`, and confirm sign-out terminates session.
+**Independent Test**: Register or submit email at `/magic_links/new`, receive tokenized URL in mailer, open verification link, verify session creation and redirection to `/dashboard`, verify Google OAuth callback stores `profile_photo` and displays avatar (or initials fallback), and confirm sign-out terminates session.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T008 [P] [US1] Unit and request tests for Magic Link generation and session verification in test/models/user_test.rb and test/controllers/magic_links_controller_test.rb
-  - *Acceptance Criteria*: Verifies `user.generate_token_for(:magic_link)` produces a valid token, expires after 15 minutes, invalidates upon `last_sign_in_at` change; `GET /magic_links/verify` with valid token signs in user, and invalid token returns 302 with alert.
-  - *Validation*: `bin/rails test test/models/user_test.rb test/controllers/magic_links_controller_test.rb`
+- [ ] T008 [P] [US1] Unit and request tests for Magic Link generation, OAuth profile_photo sync, and session verification in test/models/user_test.rb, test/controllers/magic_links_controller_test.rb, and test/controllers/oauth_controller_test.rb
+  - *Acceptance Criteria*: Verifies `user.generate_token_for(:magic_link)` produces a valid token, expires after 15 minutes, invalidates upon `last_sign_in_at` change; `GET /magic_links/verify` with valid token signs in user, and invalid token returns 302 with alert; `GET /auth/google/callback` populates `user.profile_photo` from the OAuth payload `picture` field and handles missing `picture` gracefully (`nil`).
+  - *Validation*: `bin/rails test test/models/user_test.rb test/controllers/magic_links_controller_test.rb test/controllers/oauth_controller_test.rb`
 
 - [ ] T009 [P] [US1] System test for end-to-end Magic Link login flow in test/system/authentication_test.rb
   - *Acceptance Criteria*: Capybara system test simulates entering email, opening email link, arriving at dashboard, and signing out.
@@ -78,8 +78,8 @@
   - *Acceptance Criteria*: `new` renders email input; `create` finds or creates user by normalized email, generates token, sends mailer via `deliver_later` with Solid Queue, and renders confirmation; `verify` finds user by token, updates `last_sign_in_at`, establishes session, and redirects to dashboard.
   - *Validation*: `bin/rails test test/controllers/magic_links_controller_test.rb`
 
-- [ ] T013 [P] [US1] Implement Google OAuth flow in app/controllers/oauth_controller.rb and app/models/oauth_identity.rb
-  - *Acceptance Criteria*: `GET /auth/google` redirects to Google OAuth endpoint with secure state token; `GET /auth/google/callback` exchanges authorization code, verifies identity, creates or links `OAuthIdentity`, calls `start_new_session_for`, and redirects to dashboard.
+- [ ] T013 [P] [US1] Implement Google OAuth flow and profile_photo synchronization in app/controllers/oauth_controller.rb and app/models/oauth_identity.rb
+  - *Acceptance Criteria*: `GET /auth/google` redirects to Google OAuth endpoint with secure state token and `openid email profile` scopes; `GET /auth/google/callback` exchanges authorization code, verifies identity, extracts `email`, `name`, and `picture`, creates or links `OAuthIdentity`, updates `user.profile_photo` with the OAuth `picture` URL when provided, calls `start_new_session_for`, and redirects to dashboard.
   - *Validation*: `bin/rails test test/controllers/oauth_controller_test.rb`
 
 - [ ] T014 [US1] Implement SessionsController in app/controllers/sessions_controller.rb and app/views/sessions/new.html.erb
@@ -191,11 +191,11 @@
 ### Tests for User Story 4 ⚠️
 
 - [ ] T031 [P] [US4] Unit and channel tests for NoteCollaborator and NoteChannel in test/models/note_collaborator_test.rb and test/channels/note_channel_test.rb
-  - *Acceptance Criteria*: Tests that owner cannot be added as collaborator; tests `NoteChannel` subscription authorization and presence broadcast (`appear`/`disappear`).
+  - *Acceptance Criteria*: Tests that owner cannot be added as collaborator; tests `NoteChannel` subscription authorization and presence broadcast (`appear`/`disappear`) including user `profile_photo` and `avatar_color`.
   - *Validation*: `bin/rails test test/models/note_collaborator_test.rb test/channels/note_channel_test.rb`
 
 - [ ] T032 [P] [US4] System test for multi-user collaboration and presence in test/system/collaborative_presence_test.rb
-  - *Acceptance Criteria*: Opens two browser sessions with different users on the same note, asserts avatar presence renders for both users.
+  - *Acceptance Criteria*: Opens two browser sessions with different users on the same note, asserts avatar presence (OAuth `profile_photo` or initials badge fallback) renders for both users.
   - *Validation*: `bin/rails test:system test/system/collaborative_presence_test.rb`
 
 ### Implementation for User Story 4
@@ -209,7 +209,7 @@
   - *Validation*: `bin/rails test test/models/note_collaborator_test.rb`
 
 - [ ] T035 [US4] Implement NoteChannel with presence tracking in app/channels/note_channel.rb
-  - *Acceptance Criteria*: Verifies authorization on `subscribed`; tracks presence via Solid Cable; handles `appear` and `disappear` actions, broadcasting `presence_update` and `content_updated` messages to `note_#{note.id}` stream.
+  - *Acceptance Criteria*: Verifies authorization on `subscribed`; tracks presence via Solid Cable; handles `appear` and `disappear` actions, broadcasting `presence_update` (with `id`, `name`, `profile_photo`, `avatar_color`, `is_owner`) and `content_updated` messages to `note_#{note.id}` stream.
   - *Validation*: `bin/rails test test/channels/note_channel_test.rb`
 
 - [ ] T036 [US4] Implement CollaboratorsController in app/controllers/collaborators_controller.rb
@@ -217,11 +217,11 @@
   - *Validation*: `bin/rails test test/controllers/collaborators_controller_test.rb`
 
 - [ ] T037 [US4] Implement Stimulus presence controller in app/javascript/controllers/presence_controller.js
-  - *Acceptance Criteria*: Connects to `NoteChannel` via Action Cable consumer; manages `appear`/`disappear` hooks; renders live avatar badges in note header; listens for remote updates.
+  - *Acceptance Criteria*: Connects to `NoteChannel` via Action Cable consumer; manages `appear`/`disappear` hooks; renders live avatar badges in note header (displaying `<img>` when `profile_photo` is present or initials badge with `avatar_color` when `null`); listens for remote updates.
   - *Validation*: Open note in two browser tabs and check avatar stack updates in header.
 
 - [ ] T038 [US4] Build collaborator drawer and presence avatar partials in app/views/notes/_collaborators_drawer.html.erb and app/views/notes/_presence_avatars.html.erb
-  - *Acceptance Criteria*: Header displays connected avatars with tooltips; drawer allows owner to invite collaborators by email and remove existing collaborators.
+  - *Acceptance Criteria*: Header displays connected avatars (`profile_photo` image or initials fallback) with tooltips; drawer allows owner to invite collaborators by email and remove existing collaborators.
   - *Validation*: Open note in browser, open collaborator drawer, invite user, and verify UI update.
 
 **Checkpoint**: User Stories 1 through 4 are fully functional and independently testable.

@@ -24,8 +24,9 @@ So that my private notes and documents are protected and accessible across sessi
 
 1. **Given** an unauthenticated visitor, **When** they submit valid registration credentials (name, email, password), **Then** an account is created, they are signed in, and redirected to their personal workspace.
 2. **Given** a registered user, **When** they submit valid login credentials, **Then** an authenticated session is established and their notebook contents are displayed.
-3. **Given** an authenticated user, **When** they click "Sign Out", **Then** the session is terminated and private notes are no longer accessible without re-authenticating.
-4. **Given** invalid or missing registration/login credentials, **When** the form is submitted, **Then** clear, actionable validation messages are displayed without clearing safe form fields.
+3. **Given** a user authenticating via an external OAuth provider, **When** the provider supplies a profile picture, **Then** the system stores the profile photo on the user's account and displays it in their workspace profile and presence indicators (falling back to a default avatar/initials if none is provided).
+4. **Given** an authenticated user, **When** they click "Sign Out", **Then** the session is terminated and private notes are no longer accessible without re-authenticating.
+5. **Given** invalid or missing registration/login credentials, **When** the form is submitted, **Then** clear, actionable validation messages are displayed without clearing safe form fields.
 
 ---
 
@@ -80,7 +81,7 @@ So that we can brainstorm, take meeting notes, and co-write content cooperativel
 **Acceptance Scenarios**:
 
 1. **Given** the owner of a note, **When** they invite another registered user by email as a collaborator, **Then** the collaborator is granted access and the note appears in their shared notebook view.
-2. **Given** multiple collaborators viewing the same note simultaneously, **When** a collaborator opens or focuses on the note, **Then** an active presence avatar or indicator is visible to all participants.
+2. **Given** multiple collaborators viewing the same note simultaneously, **When** a collaborator opens or focuses on the note, **Then** an active presence avatar (displaying their OAuth profile photo if available, or initials fallback) or indicator is visible to all participants.
 3. **Given** two collaborators editing a note concurrently, **When** one collaborator makes modifications, **Then** the updates are broadcast and rendered in the other collaborator's editor in real time.
 4. **Given** the note owner, **When** they remove a collaborator's access, **Then** the removed user's active session is revoked and they can no longer view or edit the private note.
 
@@ -113,6 +114,7 @@ So that external readers can view the formatted note without needing to create a
 - **Deletion of Parent Page with Sub-pages or Folders with Notes**: When a user attempts to delete a parent item that contains sub-pages or notes, the system MUST prompt with an explicit confirmation dialog detailing the number of child items affected, with safe options to cancel or confirm cascading deletion/archival.
 - **Revoked Collaborator Mid-Session**: If an active collaborator has their access revoked while viewing or editing a note, the system MUST disconnect their real-time channel, disable the editor canvas, and inform the user that their access has been updated.
 - **Empty or Whitespace-Only Notes**: Auto-save MUST handle untitled or newly created blank notes without generating invalid states or database errors.
+- **Missing or Unavailable OAuth Profile Photo**: If an OAuth provider does not return a profile photo or the user registers without OAuth, the system MUST gracefully fall back to a default visual avatar (e.g., user initials) without errors or broken image icons.
 
 ## Requirements *(mandatory)*
 
@@ -120,8 +122,9 @@ So that external readers can view the formatted note without needing to create a
 
 #### Authentication & Account Management
 - **FR-001**: System MUST provide user registration with name, unique email, and secure password validation.
-- **FR-002**: System MUST provide secure session authentication (login and logout) with encrypted session persistence.
+- **FR-002**: System MUST provide secure session authentication (login and logout) with encrypted session persistence, including support for external OAuth authentication.
 - **FR-003**: System MUST isolate each user's private workspace, ensuring that unshared folders and notes are strictly invisible to other users.
+- **FR-020**: System MUST support an optional profile photo attribute on the user account (`profile_photo`), automatically populated from the external OAuth provider when authenticating via OAuth, and displayed in user navigation and collaboration presence views with a fallback to user initials when absent.
 
 #### Rich Text Editing & Debounced Auto-Save
 - **FR-004**: System MUST provide a rich text editor supporting core typography and structural blocks: Headings (H1, H2, H3), Bold, Italic, Strikethrough, Bullet Lists, Numbered Lists, Blockquotes, and Code Blocks.
@@ -138,7 +141,7 @@ So that external readers can view the formatted note without needing to create a
 #### Real-Time Collaboration
 - **FR-012**: Note owners MUST be able to invite other registered users as Collaborators via their registered email address.
 - **FR-013**: System MUST support concurrent real-time editing of the note canvas for all active collaborators connected to the same note.
-- **FR-014**: System MUST display real-time presence indicators (e.g., active user avatars or name badges) showing which collaborators are currently viewing or editing the note.
+- **FR-014**: System MUST display real-time presence indicators (e.g., active user avatars using their OAuth profile photo or name/initials badges) showing which collaborators are currently viewing or editing the note.
 - **FR-015**: Note owners MUST be able to view the list of collaborators and revoke collaboration access at any time.
 
 #### Public Sharing & Publishing
@@ -149,7 +152,7 @@ So that external readers can view the formatted note without needing to create a
 
 ### Key Entities *(include if feature involves data)*
 
-- **User**: Represents a registered account with identity attributes (name, email, password credentials, account timestamps).
+- **User**: Represents a registered account with identity attributes (name, email, optional `profile_photo` reference populated via OAuth, password credentials, account timestamps).
 - **Folder**: An organizational container belonging to a user, with attributes (name, user reference, optional parent folder reference for nested folders, timestamps).
 - **Note / Page**: A rich text document entity with attributes:
   - Title (string)
@@ -184,3 +187,4 @@ So that external readers can view the formatted note without needing to create a
 - Public sharing is strictly read-only; anonymous visitors cannot edit or comment on published notes.
 - Collaborators must have an existing registered account in the system to be granted editing access to private notes.
 - The default debounce delay is 750 milliseconds, providing a balanced threshold between responsiveness and server request frequency.
+- User profile photos (`profile_photo`) in this specification are optional and populated solely from OAuth identity providers during OAuth authentication; direct manual file upload and image management by the user are out of scope for this specification and deferred to future specifications.

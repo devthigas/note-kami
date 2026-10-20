@@ -30,10 +30,10 @@
   - `302 Found` (Invalid/Expired): Redirects to `/login` with flash alert: `"O link expirou ou é inválido. Solicite um novo link."`
 
 ### 1.3 Google OAuth Authentication
-- **Initiate**: `GET /auth/google` (Redirects to Google OAuth consent screen with secure `state`).
+- **Initiate**: `GET /auth/google` (Redirects to Google OAuth consent screen with secure `state` and `openid email profile` scopes).
 - **Callback**: `GET /auth/google/callback?code=:code&state=:state`
 - **Responses**:
-  - `302 Found`: Verifies token with Google API, establishes session, redirects to `/dashboard`.
+  - `302 Found`: Verifies token with Google API, extracts `email`, `name`, and `picture` (persisting the avatar URL into `user.profile_photo`), establishes session, and redirects to `/dashboard`.
   - `302 Found` (Failure): Redirects to `/login` with alert message.
 
 ### 1.4 Sign Out

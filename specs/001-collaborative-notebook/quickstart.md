@@ -32,15 +32,15 @@ The application will be available at `http://localhost:3000`.
 
 ## 2. End-to-End Validation Scenarios
 
-### Scenario A: Passwordless Authentication via Magic Link
+### Scenario A: Passwordless Authentication via Magic Link & Google OAuth Profile Photo
 1. Navigate to `http://localhost:3000/magic_links/new`.
 2. Enter email `autor@notekami.test` and click **"Enviar Link Mágico"**.
 3. In the terminal output or development email inbox (`/rails/mailers`), retrieve the generated sign-in URL containing the 15-minute token.
 4. Open the link in the browser.
 5. **Expected Outcome**:
-   - The user is authenticated automatically.
-   - Redirected to `/dashboard` with session established.
-   - Re-clicking the same link or waiting > 15 minutes fails with an expiration message.
+   - The user is authenticated automatically and redirected to `/dashboard` with session established.
+   - When signing in via Google OAuth (`/auth/google`), the user's OAuth profile picture URL is saved in `user.profile_photo` and displayed in the navigation bar (falling back to user initials when `profile_photo` is absent).
+   - Re-clicking the same magic link or waiting > 15 minutes fails with an expiration message.
 
 ### Scenario B: Rich Text Editing & Debounced Auto-Save
 1. Click **"Nova Nota"** on the dashboard.
@@ -68,7 +68,7 @@ The application will be available at `http://localhost:3000`.
 2. Open a separate Incognito window and log in as `colega@notekami.test`.
 3. Open the shared note in both windows side-by-side.
 4. **Expected Outcome**:
-   - Both browser tabs display active presence avatar badges for each user.
+   - Both browser tabs display active presence avatar badges for each user (showing their OAuth `profile_photo` if present, or initials fallback).
    - When User A types in the note, the changes propagate to User B's screen in real time over Solid Cable.
 
 ### Scenario E: Public Sharing via Tokenized Link

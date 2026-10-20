@@ -31,5 +31,5 @@
 
 ## Notes
 
-- All quality checklist criteria validated and verified.
-- The specification is complete, technology-agnostic, and ready for `/speckit-plan`.
+- All quality checklist criteria validated and verified (updated 2026-10-16 to include OAuth profile photo support and explicit scope exclusion of manual upload for future specs).
+- The specification is complete, technology-agnostic, and ready for `/speckit-clarify` or `/speckit-plan`.

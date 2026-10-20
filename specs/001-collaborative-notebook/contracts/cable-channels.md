@@ -59,12 +59,14 @@ Broadcast whenever a collaborator connects, disconnects, or sends a heartbeat.
       {
         "id": 1,
         "name": "Alice Silva",
+        "profile_photo": "https://lh3.googleusercontent.com/a/default-user",
         "avatar_color": "#4f46e5",
         "is_owner": true
       },
       {
         "id": 5,
         "name": "Bruno Souza",
+        "profile_photo": null,
         "avatar_color": "#059669",
         "is_owner": false
       }
@@ -72,7 +74,7 @@ Broadcast whenever a collaborator connects, disconnects, or sends a heartbeat.
   }
   ```
 - **Client Handling**:
-  - `presence_controller.js` updates the header avatar stack showing active collaborators.
+  - `presence_controller.js` updates the header avatar stack showing active collaborators (rendering an `<img>` with `profile_photo` when present, or initials badge with `avatar_color` when `null`).
 
 ##### 2. `content_updated`
 Broadcast by the server when an auto-save or edit from another collaborator is successfully saved.
