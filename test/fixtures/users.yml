@@ -11,3 +11,9 @@ two:
   profile_photo: ""
   email_address: two@example.com
   password_digest: <%= password_digest %>
+
+tree:
+  name: Thiago Henrique
+  profile_photo: "https://avatars.githubusercontent.com/u/76951283?v=4"
+  email_address: "thiagodev502@gmail.com"
+  password_digest: <%= password_digest %>
