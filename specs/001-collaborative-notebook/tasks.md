@@ -28,19 +28,19 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this foundational phase is complete.
 
-- [ ] T004 Create database migration for users, sessions, and oauth_identities in db/migrate/
+- [x] T004 Create database migration for users, sessions, and oauth_identities in db/migrate/
   - *Acceptance Criteria*: Creates `users` table with `email_address` (string, not null, unique index), `name` (string, not null, max length 100), `profile_photo` (string, nullable, stores OAuth profile picture URL; manual upload deferred to future specs), `password_digest` (string, nullable), `last_sign_in_at` (datetime, nullable); creates `sessions` table with `user_id` (bigint, not null, indexed, foreign key to users), `ip_address` (string), `user_agent` (string); creates `oauth_identities` table with `user_id` (bigint, not null, indexed), `provider` (string, not null), `uid` (string, not null), `email` (string, nullable), compound unique index on `[:provider, :uid]`.
   - *Validation*: `bin/rails db:migrate`
 
-- [ ] T005 [P] Implement base User, Session, and Current models in app/models/user.rb, app/models/session.rb, and app/models/current.rb
+- [x] T005 [P] Implement base User, Session, and Current models in app/models/user.rb, app/models/session.rb, and app/models/current.rb
   - *Acceptance Criteria*: `User` has `has_many :sessions, dependent: :destroy`, validates `name` presence and max length 100, validates `email_address` presence, uniqueness case-insensitive, and format with `URI::MailTo::EMAIL_REGEXP`, and supports optional `profile_photo` (`allow_nil: true`); `Session` belongs to `User`; `Current` declares `attribute :user, :session`.
   - *Validation*: `bin/rails test test/models/`
 
-- [ ] T006 [P] Implement authentication controller concern in app/controllers/concerns/authentication.rb
+- [x] T006 [P] Implement authentication controller concern in app/controllers/concerns/authentication.rb
   - *Acceptance Criteria*: Defines `require_authentication`, `resume_session`, `start_new_session_for(user)`, and `terminate_session` storing signed session id in `cookies.signed.permanent[:session_id]`; included in `ApplicationController`.
   - *Validation*: Unit test verification in controller helper test.
 
-- [ ] T007 Configure development mailer delivery and base layout in config/environments/development.rb and app/views/layouts/application.html.erb
+- [x] T007 Configure development mailer delivery and base layout in config/environments/development.rb and app/views/layouts/application.html.erb
   - *Acceptance Criteria*: `config/environments/development.rb` sets `config.action_mailer.delivery_method = :test` or `:letter_opener`; `app/views/layouts/application.html.erb` includes Tailwind CSS links, Hotwire Turbo tags, flash message display partial, and current user navigation header rendering `Current.user.profile_photo` avatar when present or user initials badge fallback when absent.
   - *Validation*: Start `bin/rails server` and verify HTTP 200 response.
 

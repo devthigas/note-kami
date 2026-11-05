@@ -1,0 +1,52 @@
+<header class="bg-white border-b border-gray-200">
+  <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <%= link_to root_path, class: "flex items-center gap-2 font-bold text-xl text-gray-900 tracking-tight hover:text-gray-700 transition" do %>
+        <span class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-extrabold shadow-sm">NK</span>
+        <span>NoteKami</span>
+      <% end %>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <% if authenticated? %>
+        <div class="relative" data-controller="dropdown" data-action="click@window->dropdown#close keydown.esc@window->dropdown#closeOnEsc">
+          <button type="button"
+                  data-action="click->dropdown#toggle"
+                  class="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  id="user-menu-button">
+            <%= avatar_helper %>
+            <svg class="w-4 h-4 text-gray-500 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <div data-dropdown-target="menu"
+               class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 transition-all"
+               role="menu"
+               aria-orientation="vertical"
+               aria-labelledby="user-menu-button">
+            <div class="px-4 py-2 border-b border-gray-100">
+              <p class="text-sm font-semibold text-gray-900 truncate"><%= Current.user.name %></p>
+              <p class="text-xs text-gray-500 truncate mt-0.5"><%= Current.user.email_address %></p>
+            </div>
+
+            <div class="pt-1">
+              <%= button_to session_path, method: :delete, class: "w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer", form_class: "w-full" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Sair da conta</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <div class="flex items-center gap-3">
+          <%= link_to "Entrar", new_session_path, class: "text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md hover:bg-gray-100 transition" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</header>
